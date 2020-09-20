@@ -1,5 +1,7 @@
+.rebel_readline_history
 pom.xml
 pom.xml.asc
+.clj-kondo/.cache
 *.jar
 *.class
 /lib/

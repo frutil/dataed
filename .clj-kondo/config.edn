@@ -1,0 +1,1 @@
+{:lint-as {frutil.spa.state/def-state clojure.core/def}}
