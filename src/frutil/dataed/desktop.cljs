@@ -9,17 +9,13 @@
    [frutil.spa.devtools.core :as devtools]
    [frutil.spa.mui :as mui]
 
-   [frutil.dataed.Browser :refer [Browser]]))
+   [frutil.dataed.browser :as browser]))
 
 
 (defn AppBar []
   [app-bar
    {:position :fixed}
-   [toolbar
-    [:div
-     {:style {:font-weight 900
-              :letter-spacing "1px"}}
-     "Datäd"]]])
+   [browser/Statusbar]])
 
 
 (defn Desktop []
@@ -30,5 +26,5 @@
     [:div.toolbar]
     [:br]
     [:main
-     [Browser]]]
+     [browser/Browser]]]
    [devtools/Console]])
