@@ -1,6 +1,9 @@
 (ns frutil.dataed.browser
   (:require
 
+   [reagent-material-ui.colors :as colors]
+
+   [reagent-material-ui.core.typography :refer [typography]]
    [reagent-material-ui.core.card :refer [card]]
    [reagent-material-ui.core.card-content :refer [card-content]]
    [reagent-material-ui.core.card-action-area :refer [card-action-area]]
@@ -14,7 +17,6 @@
    [reagent-material-ui.icons.more-vert :refer [more-vert]]
 
    [frutil.devtools :as dev]
-   [frutil.db.browser :as b]
 
    [frutil.spa.state :as state]
    [frutil.spa.mui :as mui]
@@ -40,7 +42,10 @@
     (state/set! root :singleton root-id nil)
     (state/set! cursor :singleton root-id nil)))
 
-(initialize-with-dummy!)
+(defonce initialized
+  (do
+    (initialize-with-dummy!)
+    true))
 
 
 ;;; commands
@@ -61,67 +66,123 @@
                         commands/execute e command))})
 
 
+;;; commons
+
+(defn ActionCard [{:keys [elevation on-click color]} content]
+  [card
+   {:elevation elevation
+    :style {:overflow :unset
+            :background-color color}}
+   [card-action-area
+    {:on-click on-click
+     :class :height-100
+     :component :div}
+    [card-content
+     {:class :sticky}
+     content]]])
+
+
+(defn TreeCardsWrapper [parent & children]
+  [:div.TreeCardsWrapper
+   {:style {:display :flex
+            :gap "8px"
+            :align-items :stretch}}
+   parent
+   [:div.TreeCardsWrapper-Children
+    {:style {:display :flex
+             :flex-direction :column
+             :gap "16px"}}
+    children]])
 
 
 ;;; entities
 
-(defn Value [v]
-  (mui/Data v))
+
+(def palette
+  {:entity (get colors/red 100)
+   :attribute (get colors/green 100)
+   :value-seq (get colors/blue 100)
+   :value (get colors/orange 100)})
+
+(defn elevation [entity-path sub-level]
+  (+ sub-level (* 3 (count entity-path))))
+
+
+(defn Value [v entity-path]
+  [ActionCard
+   {:elevation 3
+    :color (-> palette :value)}
+   (if (string? v)
+     (if (= v "")
+       [:span
+        "<empty string>"]
+       v)
+     (mui/Data v))])
 
 
 (declare Entity)
 
 
-(defn Ref [e]
+(defn Ref [e entity-path]
   ;; [mui/Card
   ;;  [:i "#" (get entity :db/id)]])
-  [Entity e])
+  [Entity e (conj entity-path :>)])
 
 
-(defn EntityAttributeValue [a v]
+(defn AttributeValue [a v entity-path]
   (if (db/attribute-is-ref? (db) a)
-    ^{:key v} [Ref v]
-    ^{:key v} [Value v]))
+    ^{:key v} [Ref v entity-path]
+    ^{:key v} [Value v entity-path]))
 
 
-(defn EntityAttribute [a v]
+(defn AttributeValueCollection [a vs entity-path]
+  [TreeCardsWrapper
+   [ActionCard
+    {:elevation (elevation entity-path 3)
+     :color (-> palette :value-seq)}
+    [:div "⁞"]]
+   (for [v vs]
+     ^{:key v}
+     [AttributeValue a v entity-path])])
+
+
+(defn Attribute [a v entity-path]
   [:div
-   [:div [:b (str a)]]
+   {:style {:display :flex
+            :gap "8px"}}
+   [ActionCard
+    {:elevation (elevation entity-path 2)
+     :color (-> palette :attribute)}
+    [mui/Caption a]]
    (if (db/attribute-is-many? (db) a)
-     [:div.flex
-      (for [v v]
-        ^{:key v}
-        [EntityAttributeValue a v])]
-     [EntityAttributeValue a v])])
+     [AttributeValueCollection a v entity-path]
+     [AttributeValue a v entity-path])])
 
 
-(defn Entity [e]
+
+
+(defn Entity [e entity-path]
   (let [entity (db/entity (db) e)
-        as (-> entity keys sort)]
-    [card
-     [:div.flex
-      {:style {:justify-content :space-between
-               :align-items :center
-               :padding "0.5rem 0.5rem 0 1rem"}}
-      [:div
-       [:i "#" e]]
-      [icon-button
-       {:on-click #(mui/show-dialog [item-selector/Dialog
-                                     (entity-item-selector-options e)])
-        :size :small}
-       [more-vert]]]
-     [card-content
-      [:div.stack
-       (for [a as]
-         ^{:key a}
-         [EntityAttribute a (get entity a)])]]]))
+        as (-> entity keys sort)
+        on-entity-clicked #(mui/show-dialog [item-selector/Dialog
+                                             (entity-item-selector-options e)])]
+    [:div.Entity
+     [TreeCardsWrapper
+      [ActionCard
+       {:elevation (elevation entity-path 1)
+        :on-click on-entity-clicked
+        :color (-> palette :entity)}
+       [:div [:i "#" e]]]
+      (for [a as]
+        ^{:key a}
+        [Attribute a (get entity a) entity-path])]]))
 
 
 (defn EntitiesList [es]
   [:div.EntitiesList.flex
    (for [e es]
      ^{:key e}
-     [Entity e])])
+     [Entity e []])])
 
 
 (defn Statusbar []
@@ -147,6 +208,11 @@
 
 (defn Browser []
   [:div
+   ;; [:div.flex
+   ;;  {:style {:align-items :center}}
+   ;;  [:div {:style {:height "1000px"
+   ;;                 :background-color :yellow}}
+   ;;   [:div.sticky "sticky"]]]
    (when-let [db (db)]
      [:div.stack
       [EntitiesList [(root)]]])])

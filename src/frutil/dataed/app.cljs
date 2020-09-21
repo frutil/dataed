@@ -9,13 +9,15 @@
 
 
 (def theme
+  ;; https://material.io/resources/color/#!/?view.left=0&view.right=0&primary.color=4A148C&secondary.color=D81B60
   {:palette {:primary {:main (get colors/purple 900)}
-             :secondary {:main (get colors/pink 600)}}})
+             :secondary {:main (get colors/pink 600)}
+             :background {:default "#E1E2E1"}}})
 
 
 (defn styles [{:keys [spacing] :as theme}]
-  ;; TODO (js/console.log "THEME" (-> theme :mixins))
-  {"& .toolbar" (-> theme :mixins :toolbar)
+  {"& .MuiTypography-caption" {:color (-> theme :palette :primary :light)}
+   "& .Workarea" {:padding (spacing 2)}
 
    ;; TODO move to spa
    ;; common
@@ -25,7 +27,11 @@
                :flex-direction :column
                :gap (str (spacing 1) "px")}
    "& .flex" {:display :flex
-              :gap (str (spacing 1) "px")}})
+              :gap (str (spacing 1) "px")}
+   "& .sticky" {:position :sticky
+                :top 0
+                :align-self :flex-start}
+   "& .height-100" {:height "100%"}})
 
 
 (defn mount-app []

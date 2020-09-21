@@ -12,19 +12,26 @@
    [frutil.dataed.browser :as browser]))
 
 
-(defn AppBar []
+(defn Header []
   [app-bar
-   {:position :fixed}
+   {:position :static}
    [browser/Statusbar]])
 
 
-(defn Desktop []
-  [:<>
+(defn Content []
+  [:div
+   {:style {}}
    [mui/DialogsContainer]
-   [AppBar]
-   [container
-    [:div.toolbar]
-    [:br]
-    [:main
-     [browser/Browser]]]
-   [devtools/Console]])
+   [:main.Workarea
+    [browser/Browser]]])
+
+
+(defn Footer []
+  [devtools/Console])
+
+
+(defn Desktop []
+  [mui/Desktop--Header-Content-Footer
+   [Header]
+   [Content]
+   [Footer]])
