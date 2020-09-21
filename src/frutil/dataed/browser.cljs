@@ -1,5 +1,6 @@
 (ns frutil.dataed.browser
   (:require
+   [clojure.string :as str]
 
    [reagent-material-ui.colors :as colors]
 
@@ -25,17 +26,19 @@
 
    [frutil.db.core :as db]
    [frutil.db.commands :as commands]
-   [frutil.db.modules.annotations :as annotations]
-   [frutil.db.modules.brainstorming :as brainstorming]
-   [clojure.string :as str]))
+                                        ;[frutil.db.modules.brainstorming :as brainstorming]
+
+   [frutil.dataed.modules.annotations]))
+
 
 
 (defn db-name [] (navigation/param :db-name))
-(state/def-state dbs {:localstorage? true})
+(state/def-state dbs {:localstorage? true
+                      :localstorage-save-transform-f db/serializable-value})
 (defn db [] (dbs (db-name)))
-(state/def-state roots {})
+(state/def-state roots {:localstorage? true})
 (defn root [] (roots (db-name)))
-(state/def-state cursors {})
+(state/def-state cursors {:localstorage? true})
 (defn cursor [] (cursors (db-name)))
 
 
@@ -195,9 +198,12 @@
     [toolbar
      {:style {:gap "1rem"}}
      [:div
+      [:img {:src "dataed.svg"
+             :height "32px"}]]
+     [:div
       {:style {:font-weight 900
                :letter-spacing "1px"}}
-      "Datäd"]
+      "Dataed"]
      [:div (db-name)]
      (when-let [r (root)] [:div "r: " r])
      (when-let [c (cursor)] [:div "c: " c])
@@ -206,7 +212,6 @@
         "[ "
         (->> db
              :modules
-             (map :ident)
              (map name)
              sort
              (str/join " "))
@@ -218,8 +223,8 @@
 (defn create-db [db-name]
   (js/console.log "CREATE DB" db-name)
   (let [k db-name
-        dummy-db (-> (db/new-db {:modules [(annotations/module)
-                                           (brainstorming/module)]}))
+        dummy-db (-> (db/new-db {:modules [:annotations]}))
+                                           ;(brainstorming/module)]}))
         root-id (db/root-id dummy-db)]
     (state/set! dbs k dummy-db nil)
     (state/set! roots k root-id nil)

@@ -9,7 +9,6 @@
    [frutil.dataed.browser :as browser]))
 
 
-
 (def theme
   ;; https://material.io/resources/color/#!/?view.left=0&view.right=0&primary.color=4A148C&secondary.color=D81B60
   {:palette {:primary {:main (get colors/grey 800)}
