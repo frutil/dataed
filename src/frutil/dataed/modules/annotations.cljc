@@ -7,13 +7,15 @@
   db)
 
 
-(defn add-annotation [db e]
-  (let [db (db/transact
-            db [[:db/add -1 :annotations.annotation/text ""]])
-        id (db/tempid db -1)
-        db (db/transact
-            db [[:db/add e :annotations.container/annotations id]])]
-    db))
+(defn add-annotation [e transact]
+  (transact
+   (fn [db]
+     (let [db (db/transact
+               db [[:db/add -1 :annotations.annotation/text ""]])
+           id (db/tempid db -1)
+           db (db/transact
+               db [[:db/add e :annotations.container/annotations id]])]
+       db))))
 
 
 (defn module []

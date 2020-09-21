@@ -25,9 +25,8 @@
    [frutil.spa.mui.item-selector :as item-selector]
 
    [frutil.db.core :as db]
-   [frutil.db.commands :as commands]
-                                        ;[frutil.db.modules.brainstorming :as brainstorming]
 
+   [frutil.dataed.commands :as commands]
    [frutil.dataed.modules.annotations]))
 
 
@@ -41,6 +40,10 @@
 (state/def-state cursors {:localstorage? true})
 (defn cursor [] (cursors (db-name)))
 
+
+(defn transactor [db-name]
+  (fn [transact]
+    (state/update! dbs db-name transact)))
 
 
 ;; (defn initialize-with-dummy! []
@@ -64,9 +67,7 @@
                   :secondary (or (-> command :description))})
                (commands/commands (db) e))
    :on-item-selected (fn [{:keys [command]}]
-                       (state/update!
-                        dbs (db-name)
-                        commands/execute e command))})
+                       (commands/execute e command (transactor (db-name))))})
 
 
 ;;; commons
