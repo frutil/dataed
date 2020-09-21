@@ -8,6 +8,7 @@
 
    [frutil.spa.devtools.core :as devtools]
    [frutil.spa.mui :as mui]
+   [frutil.spa.navigation :as navigation]
 
    [frutil.dataed.browser :as browser]))
 
@@ -23,7 +24,7 @@
    {:style {}}
    [mui/DialogsContainer]
    [:main.Workarea
-    [browser/Browser]]])
+    [navigation/Switcher :view]]])
 
 
 (defn Footer []

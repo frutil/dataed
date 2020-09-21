@@ -2,16 +2,18 @@
   (:require
    [reagent-material-ui.colors :as colors]
 
+   [frutil.spa.navigation :as navigation]
    [frutil.spa.mui :as mui]
 
-   [frutil.dataed.desktop :as desktop]))
+   [frutil.dataed.desktop :as desktop]
+   [frutil.dataed.browser :as browser]))
 
 
 
 (def theme
   ;; https://material.io/resources/color/#!/?view.left=0&view.right=0&primary.color=4A148C&secondary.color=D81B60
-  {:palette {:primary {:main (get colors/purple 900)}
-             :secondary {:main (get colors/pink 600)}
+  {:palette {:primary {:main (get colors/grey 800)}
+             :secondary {:main (get colors/lime 600)}
              :background {:default "#E1E2E1"}}})
 
 
@@ -22,6 +24,7 @@
    ;; TODO move to spa
    ;; common
    "& .b" {:font-weight :bold :letter-spacing "1px"}
+   "& .monospace" {:font-family :monospace}
    "& .monospace textarea" {:font-family :monospace}
    "& .stack" {:display :flex
                :flex-direction :column
@@ -39,6 +42,7 @@
 
 
 (defn initialize []
+  (navigation/initialize! [(-> (browser/model) :route)])
   (mount-app))
 
 

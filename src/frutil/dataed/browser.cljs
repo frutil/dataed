@@ -18,6 +18,7 @@
 
    [frutil.devtools :as dev]
 
+   [frutil.spa.navigation :as navigation]
    [frutil.spa.state :as state]
    [frutil.spa.mui :as mui]
    [frutil.spa.mui.item-selector :as item-selector]
@@ -29,23 +30,22 @@
    [clojure.string :as str]))
 
 
-(state/def-state db {})
-(state/def-state root {})
-(state/def-state cursor {})
+(defn db-name [] (navigation/param :db-name))
+(state/def-state dbs {:localstorage? true})
+(defn db [] (dbs (db-name)))
+(state/def-state roots {})
+(defn root [] (roots (db-name)))
+(state/def-state cursors {})
+(defn cursor [] (cursors (db-name)))
 
 
-(defn initialize-with-dummy! []
-  (let [dummy-db (-> (db/new-db {:modules [(annotations/module)
-                                           (brainstorming/module)]}))
-        root-id (db/root-id dummy-db)]
-    (state/set! db :singleton dummy-db nil)
-    (state/set! root :singleton root-id nil)
-    (state/set! cursor :singleton root-id nil)))
 
-(defonce initialized
-  (do
-    (initialize-with-dummy!)
-    true))
+;; (defn initialize-with-dummy! []
+
+;; (defonce initialized
+;;   (do
+;;     (initialize-with-dummy!)
+;;     true))
 
 
 ;;; commands
@@ -62,7 +62,7 @@
                (commands/commands (db) e))
    :on-item-selected (fn [{:keys [command]}]
                        (state/update!
-                        db :singleton
+                        dbs (db-name)
                         commands/execute e command))})
 
 
@@ -99,10 +99,15 @@
 
 
 (def palette
-  {:entity (get colors/red 100)
-   :attribute (get colors/green 100)
-   :value-seq (get colors/blue 100)
-   :value (get colors/orange 100)})
+  {:entity :white
+   :attribute :white
+   :value-seq :white
+   :value :white})
+  ;; {:entity (get colors/grey 50)
+  ;;  :attribute (get colors/light-green 100)
+  ;;  :value-seq (get colors/indigo 50)
+  ;;  :value (str (get colors/indigo 100))})
+
 
 (defn elevation [entity-path sub-level]
   (+ sub-level (* 3 (count entity-path))))
@@ -187,51 +192,62 @@
 
 (defn Statusbar []
   [:div.Statusbar
-   [toolbar
-    {:style {:gap "1rem"}}
-    [:div
-     {:style {:font-weight 900
-              :letter-spacing "1px"}}
-     "Datäd"]
-    [:div "r: " (root)]
-    [:div "c: " (cursor)]
-    [:div
-     "[ "
-     (->> (db)
-          :modules
-          (map :ident)
-          (map name)
-          sort
-          (str/join " "))
-     " ]"]]])
+    [toolbar
+     {:style {:gap "1rem"}}
+     [:div
+      {:style {:font-weight 900
+               :letter-spacing "1px"}}
+      "Datäd"]
+     [:div (db-name)]
+     (when-let [r (root)] [:div "r: " r])
+     (when-let [c (cursor)] [:div "c: " c])
+     (when-let [db (db)]
+       [:div
+        "[ "
+        (->> db
+             :modules
+             (map :ident)
+             (map name)
+             sort
+             (str/join " "))
+        " ]"])]])
 
 
-(defn Browser []
+
+
+(defn create-db [db-name]
+  (js/console.log "CREATE DB" db-name)
+  (let [k db-name
+        dummy-db (-> (db/new-db {:modules [(annotations/module)
+                                           (brainstorming/module)]}))
+        root-id (db/root-id dummy-db)]
+    (state/set! dbs k dummy-db nil)
+    (state/set! roots k root-id nil)
+    (state/set! cursors k root-id nil)))
+
+
+(defn CreateDb [db-name]
+  [mui/Card
+   [:div
+    "Database does not exist. "
+    [button
+     {:variant :contained
+      :color :secondary
+      :on-click #(create-db db-name)}
+     "create"]]])
+
+
+(defn Browser [navigation-match]
   [:div
-   ;; [:div.flex
-   ;;  {:style {:align-items :center}}
-   ;;  [:div {:style {:height "1000px"
-   ;;                 :background-color :yellow}}
-   ;;   [:div.sticky "sticky"]]]
-   (when-let [db (db)]
+   (if-let [db (db)]
      [:div.stack
-      [EntitiesList [(root)]]])])
+      [EntitiesList [(root)]]]
+     [:div.stack
+      [CreateDb (db-name)]])])
 
 
-      ;; (let [db (b/db browser)]
-      ;;   [:div
-      ;;    [:br][:br][:hr]
-      ;;    [mui/Data (-> browser
-      ;;                  (b/q
-      ;;                   '[:find ?e ?a ?v
-      ;;                     :where
-      ;;                     [?e ?a ?v]])
-      ;;                  (->> (reduce (fn [ret [e a v]]
-      ;;                                 (-> ret
-      ;;                                     (assoc-in [e a] v)
-      ;;                                     (assoc-in [e :db/id] e)))
-      ;;                               {})
-      ;;                       vals
-      ;;                       (sort-by :db/id)))]
-      ;;    [:hr]
-      ;;    [mui/Data browser]])])])
+(defn model []
+  {:route ["/browser/:db-name"
+           {:name :browser
+            :view #'Browser
+            :parameters {:path {:db-name string?}}}]})
