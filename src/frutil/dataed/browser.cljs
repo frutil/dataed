@@ -192,7 +192,7 @@
 
 
 (defn EntitiesList [es]
-  [:div.EntitiesList.flex
+  [:div.EntitiesList.stack
    (for [e es]
      ^{:key e}
      [Entity e []])])
@@ -249,10 +249,12 @@
 (defn Browser [navigation-match]
   [:div
    (if-let [db (db)]
-     [:div.stack
-      [EntitiesList [(get-in navigation-match [:parameters :path :root-e])]]]
-     [:div.stack
-      [CreateDb (db-name)]])])
+     (let [root-e (get-in navigation-match [:parameters :path :root-e])]
+       [EntitiesList
+        (if (= root-e 0)
+          (db/q-es-wheres db '[?e _ _])
+          [root-e])])
+     [CreateDb (db-name)])])
 
 
 (defn model []
