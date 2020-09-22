@@ -154,7 +154,7 @@
 
 (defn AttributeValue [a v entity-path]
   (if (db/attribute-is-ref? (db) a)
-    ^{:key v} [Ref v entity-path]
+    ^{:key v} [Ref (if (int? v) v (get v :db/id)) entity-path]
     ^{:key v} [Value v entity-path]))
 
 
@@ -182,11 +182,15 @@
      [AttributeValue a v entity-path])])
 
 
+(dev/spy (db/q-reverse-ref-attributes-idents (db)))
 
 
 (defn Entity [e entity-path]
   (if-let [entity (db/entity (db) e)]
-    (let [as (-> entity keys sort)
+    (let [as (-> entity
+                 keys
+                 (into (db/q-reverse-ref-attributes-idents (db)))
+                 sort)
           on-entity-clicked #(mui/show-dialog [item-selector/Dialog
                                                (entity-item-selector-options e)])]
       [:div.Entity
@@ -196,9 +200,11 @@
           :on-click on-entity-clicked
           :color (-> palette :entity)}
          [:div.i "#" e]]
-        (for [a as]
+        (for [a as
+              :let [v (get entity a)]
+              :when v]
           ^{:key a}
-          [Attribute a (get entity a) entity-path])]])
+          [Attribute a v entity-path])]])
     [:div "Entity does not exist."]))
 
 
