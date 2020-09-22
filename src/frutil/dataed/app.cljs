@@ -22,6 +22,9 @@
 
    ;; TODO move to spa
    ;; common
+   "& .gap" {:gap (str (spacing 1) "px")}
+   "& .gap-2" {:gap (str (spacing 2) "px")}
+   "& .i" {:font-style :italic}
    "& .b" {:font-weight :bold :letter-spacing "1px"}
    "& .monospace" {:font-family :monospace}
    "& .monospace textarea" {:font-family :monospace}

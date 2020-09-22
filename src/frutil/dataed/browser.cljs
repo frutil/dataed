@@ -75,15 +75,18 @@
 
 ;;; commons
 
-(defn ActionCard [{:keys [elevation on-click color]} content]
+(defn ActionCard
+  [{:keys [elevation on-click href color]}
+   content]
   [card
    {:elevation elevation
     :style {:overflow :unset
             :background-color color}}
    [card-action-area
     {:on-click on-click
+     :href href
      :class :height-100
-     :component :div}
+     :component (if href :a :div)}
     [card-content
      {:class :sticky}
      content]]])
@@ -122,7 +125,7 @@
 
 (defn Value [v entity-path]
   [ActionCard
-   {:elevation 3
+   {:elevation (elevation entity-path 2)
     :color (-> palette :value)}
    (if (string? v)
      (if (= v "")
@@ -138,7 +141,15 @@
 (defn Ref [e entity-path]
   ;; [mui/Card
   ;;  [:i "#" (get entity :db/id)]])
-  [Entity e (conj entity-path :>)])
+
+  (if false ;;FIXME expanded?
+    [Entity e (conj entity-path e)]
+    [ActionCard
+     {:elevation (elevation entity-path 2)
+      :color (-> palette :value)
+      :href (navigation/href :browser {:db-name (db-name)
+                                       :root-e e})}
+     [:div.i "#" e]]))
 
 
 (defn AttributeValue [a v entity-path]
@@ -150,7 +161,7 @@
 (defn AttributeValueCollection [a vs entity-path]
   [TreeCardsWrapper
    [ActionCard
-    {:elevation (elevation entity-path 3)
+    {:elevation (elevation entity-path 2)
      :color (-> palette :value-seq)}
     [:div "⁞"]]
    (for [v vs]
@@ -163,7 +174,7 @@
    {:style {:display :flex
             :gap "8px"}}
    [ActionCard
-    {:elevation (elevation entity-path 2)
+    {:elevation (elevation entity-path 1)
      :color (-> palette :attribute)}
     [mui/Caption a]]
    (if (db/attribute-is-many? (db) a)
@@ -181,10 +192,10 @@
       [:div.Entity
        [TreeCardsWrapper
         [ActionCard
-         {:elevation (elevation entity-path 1)
+         {:elevation (elevation entity-path 0)
           :on-click on-entity-clicked
           :color (-> palette :entity)}
-         [:div [:i "#" e]]]
+         [:div.i "#" e]]
         (for [a as]
           ^{:key a}
           [Attribute a (get entity a) entity-path])]])
@@ -192,10 +203,10 @@
 
 
 (defn EntitiesList [es]
-  [:div.EntitiesList.stack
+  [:div.EntitiesList.stack.gap-2
    (for [e es]
      ^{:key e}
-     [Entity e []])])
+     [Entity e [e]])])
 
 
 (defn Statusbar []
