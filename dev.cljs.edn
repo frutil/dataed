@@ -1,3 +1,4 @@
 {:main frutil.dataed.app
  :asset-path "cljs-out/dev"
- :preloads [frutil.spa.devtools.initialize]}
+ :preloads [frutil.spa.devtools.initialize]
+ :source-map true}

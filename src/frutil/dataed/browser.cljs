@@ -32,13 +32,13 @@
 
 
 (defn db-name [] (navigation/param :db-name))
+(defn root-e [] (navigation/param :root-e))
+
 
 (state/def-state dbs {:localstorage? true
                       :localstorage-save-transform-f db/serializable-value})
 (def db (state/new-navigation-param-pointer dbs :db-name))
 
-(state/def-state roots {:localstorage? true})
-(def root (state/new-navigation-param-pointer roots :db-name))
 
 (state/def-state cursors {:localstorage? true})
 (def cursor (state/new-navigation-param-pointer cursors :db-name))
@@ -174,20 +174,21 @@
 
 
 (defn Entity [e entity-path]
-  (let [entity (db/entity (db) e)
-        as (-> entity keys sort)
-        on-entity-clicked #(mui/show-dialog [item-selector/Dialog
-                                             (entity-item-selector-options e)])]
-    [:div.Entity
-     [TreeCardsWrapper
-      [ActionCard
-       {:elevation (elevation entity-path 1)
-        :on-click on-entity-clicked
-        :color (-> palette :entity)}
-       [:div [:i "#" e]]]
-      (for [a as]
-        ^{:key a}
-        [Attribute a (get entity a) entity-path])]]))
+  (if-let [entity (db/entity (db) e)]
+    (let [as (-> entity keys sort)
+          on-entity-clicked #(mui/show-dialog [item-selector/Dialog
+                                               (entity-item-selector-options e)])]
+      [:div.Entity
+       [TreeCardsWrapper
+        [ActionCard
+         {:elevation (elevation entity-path 1)
+          :on-click on-entity-clicked
+          :color (-> palette :entity)}
+         [:div [:i "#" e]]]
+        (for [a as]
+          ^{:key a}
+          [Attribute a (get entity a) entity-path])]])
+    [:div "Entity does not exist."]))
 
 
 (defn EntitiesList [es]
@@ -209,7 +210,7 @@
                :letter-spacing "1px"}}
       "Dataed"]
      [:div (db-name)]
-     (when-let [r (root)] [:div "r: " r])
+     (when-let [r (root-e)] [:div "r: " r])
      (when-let [c (cursor)] [:div "c: " c])
      (when-let [db (db)]
        [:div
@@ -231,7 +232,6 @@
                                            ;(brainstorming/module)]}))
         root-id (db/root-id dummy-db)]
     (state/set! dbs k dummy-db nil)
-    (state/set! roots k root-id nil)
     (state/set! cursors k root-id nil)))
 
 
@@ -250,13 +250,14 @@
   [:div
    (if-let [db (db)]
      [:div.stack
-      [EntitiesList [(root)]]]
+      [EntitiesList [(get-in navigation-match [:parameters :path :root-e])]]]
      [:div.stack
       [CreateDb (db-name)]])])
 
 
 (defn model []
-  {:route ["/browser/:db-name"
+  {:route ["/browser/:db-name/:root-e"
            {:name :browser
             :view #'Browser
-            :parameters {:path {:db-name string?}}}]})
+            :parameters {:path {:db-name string?
+                                :root-e int?}}}]})
