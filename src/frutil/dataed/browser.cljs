@@ -32,13 +32,16 @@
 
 
 (defn db-name [] (navigation/param :db-name))
+
 (state/def-state dbs {:localstorage? true
                       :localstorage-save-transform-f db/serializable-value})
-(defn db [] (dbs (db-name)))
+(def db (state/new-navigation-param-pointer dbs :db-name))
+
 (state/def-state roots {:localstorage? true})
-(defn root [] (roots (db-name)))
+(def root (state/new-navigation-param-pointer roots :db-name))
+
 (state/def-state cursors {:localstorage? true})
-(defn cursor [] (cursors (db-name)))
+(def cursor (state/new-navigation-param-pointer cursors :db-name))
 
 
 (defn transactor [db-name]
