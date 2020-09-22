@@ -26,9 +26,14 @@
 
    [frutil.db.core :as db]
 
-   [frutil.dataed.commands :as commands]
-   [frutil.dataed.modules.annotations]))
+   [frutil.dataed.modules :as modules]
+   [frutil.dataed.modules.annotations :as annotations]))
 
+
+(def _modules [(annotations/module)])
+
+(defn modules []
+  _modules)
 
 
 (defn db-name [] (navigation/param :db-name))
@@ -60,7 +65,7 @@
 ;;; commands
 
 
-(defn entity-item-selector-options [e]
+(defn entity-item-selector-options [e a c v]
   {:items (map (fn [command]
                  {:command command
                   :ident (-> command :ident)
@@ -68,9 +73,9 @@
                                (-> command :ident str)
                                "hello")
                   :secondary (or (-> command :description))})
-               (commands/commands (db) e))
+               (modules/commands (modules)))
    :on-item-selected (fn [{:keys [command]}]
-                       (commands/execute e command (transactor (db-name))))})
+                       (modules/execute-command e command (transactor (db-name))))})
 
 
 ;;; commons
@@ -123,10 +128,13 @@
   (+ sub-level (* 3 (count entity-path))))
 
 
-(defn Value [v entity-path]
+(defn Value [e a c v entity-path]
   [ActionCard
    {:elevation (elevation entity-path 2)
-    :color (-> palette :value)}
+    :color (-> palette :value)
+    :on-click #(mui/show-dialog
+                [item-selector/Dialog
+                 (entity-item-selector-options e a c v)])}
    (if (string? v)
      (if (= v "")
        [:span
@@ -138,7 +146,7 @@
 (declare Entity)
 
 
-(defn Ref [e entity-path]
+(defn Ref [parent-e a parent-c e entity-path]
   ;; [mui/Card
   ;;  [:i "#" (get entity :db/id)]])
 
@@ -147,39 +155,48 @@
     [ActionCard
      {:elevation (elevation entity-path 2)
       :color (-> palette :value)
-      :href (navigation/href :browser {:db-name (db-name)
-                                       :root-e e})}
+      :on-click #(mui/show-dialog
+                  [item-selector/Dialog
+                   (entity-item-selector-options parent-e a parent-c e)])}
+      ;; :href (navigation/href :browser {:db-name (db-name)
+      ;;                                  :root-e e})}
      [:div.i "#" e]]))
 
 
-(defn AttributeValue [a v entity-path]
+(defn AttributeValue [e a c v entity-path]
   (if (db/attribute-is-ref? (db) a)
-    ^{:key v} [Ref (if (int? v) v (get v :db/id)) entity-path]
-    ^{:key v} [Value v entity-path]))
+    ^{:key v} [Ref e a c (if (int? v) v (get v :db/id)) entity-path]
+    ^{:key v} [Value e a c v entity-path]))
 
 
-(defn AttributeValueCollection [a vs entity-path]
+(defn AttributeValueCollection [e a vs entity-path]
   [TreeCardsWrapper
    [ActionCard
     {:elevation (elevation entity-path 2)
-     :color (-> palette :value-seq)}
+     :color (-> palette :value-seq)
+     :on-click #(mui/show-dialog
+                 [item-selector/Dialog
+                  (entity-item-selector-options e a vs nil)])}
     [:div "⁞"]]
    (for [v vs]
      ^{:key v}
-     [AttributeValue a v entity-path])])
+     [AttributeValue e a vs v entity-path])])
 
 
-(defn Attribute [a v entity-path]
+(defn Attribute [e a v entity-path]
   [:div
    {:style {:display :flex
             :gap "8px"}}
    [ActionCard
     {:elevation (elevation entity-path 1)
-     :color (-> palette :attribute)}
+     :color (-> palette :attribute)
+     :on-click #(mui/show-dialog
+                 [item-selector/Dialog
+                  (entity-item-selector-options e a nil nil)])}
     [mui/Caption a]]
    (if (db/attribute-is-many? (db) a)
-     [AttributeValueCollection a v entity-path]
-     [AttributeValue a v entity-path])])
+     [AttributeValueCollection e a v entity-path]
+     [AttributeValue e a nil v entity-path])])
 
 
 (dev/spy (db/q-reverse-ref-attributes-idents (db)))
@@ -191,20 +208,21 @@
                  keys
                  (into (db/q-reverse-ref-attributes-idents (db)))
                  sort)
-          on-entity-clicked #(mui/show-dialog [item-selector/Dialog
-                                               (entity-item-selector-options e)])]
+          on-click #(mui/show-dialog
+                     [item-selector/Dialog
+                      (entity-item-selector-options e nil nil nil)])]
       [:div.Entity
        [TreeCardsWrapper
         [ActionCard
          {:elevation (elevation entity-path 0)
-          :on-click on-entity-clicked
+          :on-click on-click
           :color (-> palette :entity)}
          [:div.i "#" e]]
         (for [a as
               :let [v (get entity a)]
               :when v]
           ^{:key a}
-          [Attribute a v entity-path])]])
+          [Attribute e a v entity-path])]])
     [:div "Entity does not exist."]))
 
 
@@ -229,15 +247,14 @@
      [:div (db-name)]
      (when-let [r (root-e)] [:div "r: " r])
      (when-let [c (cursor)] [:div "c: " c])
-     (when-let [db (db)]
-       [:div
-        "[ "
-        (->> db
-             :modules
-             (map name)
-             sort
-             (str/join " "))
-        " ]"])]])
+     [:div
+      "[ "
+      (->> (modules)
+           (map :ident)
+           (map name)
+           sort
+           (str/join " "))
+      " ]"]]])
 
 
 
@@ -245,11 +262,10 @@
 (defn create-db [db-name]
   (js/console.log "CREATE DB" db-name)
   (let [k db-name
-        dummy-db (-> (db/new-db {:modules [:annotations]}))
-                                           ;(brainstorming/module)]}))
-        root-id (db/root-id dummy-db)]
+        schema (modules/schema (modules))
+        dummy-db (-> (db/new-db {:schema schema}))]
     (state/set! dbs k dummy-db nil)
-    (state/set! cursors k root-id nil)))
+    (state/set! cursors k 0 nil)))
 
 
 (defn CreateDb [db-name]

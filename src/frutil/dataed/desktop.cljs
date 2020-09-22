@@ -28,7 +28,8 @@
 
 
 (defn Footer []
-  [devtools/Console])
+  [:div])
+   ;; [devtools/Console]])
 
 
 (defn Desktop []

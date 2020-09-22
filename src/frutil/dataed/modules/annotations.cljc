@@ -28,10 +28,8 @@
 
             {:db/ident       :annotations.annotation/text
              :db/valueType   :db.type/string}]
-   :commands (fn [_db _e]
-               [{:ident ::add-annotation
-                 :text "Add Annotation"
-                 :f add-annotation}])})
+   :commands [{:ident ::add-annotation
+               :text "Add Annotation"
+               :f add-annotation}]})
 
 
-(db/reg-module (module))
