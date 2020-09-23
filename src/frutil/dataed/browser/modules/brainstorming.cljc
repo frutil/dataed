@@ -1,4 +1,4 @@
-(ns frutil.dataed.modules.brainstorming
+(ns frutil.dataed.browser.modules.brainstorming
   (:require
    [frutil.db.tx :as tx]))
 

@@ -5,6 +5,10 @@
    [frutil.spa.navigation :as navigation]
    [frutil.spa.mui :as mui]
 
+   ;; browser modules
+   [frutil.dataed.browser.modules.browser]
+   [frutil.dataed.browser.modules.annotations]
+
    [frutil.dataed.desktop :as desktop]
    [frutil.dataed.browser :as browser]))
 

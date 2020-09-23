@@ -1,4 +1,15 @@
-(ns frutil.dataed.modules)
+(ns frutil.dataed.browser.modules)
+
+
+(defonce REGISTRY (atom {}))
+
+
+(defn reg-module [module]
+  (swap! REGISTRY assoc (get module :ident) module))
+
+
+(defn modules []
+  (-> @REGISTRY vals))
 
 
 (defn commands [modules]

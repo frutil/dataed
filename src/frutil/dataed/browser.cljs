@@ -24,61 +24,11 @@
    [frutil.spa.mui :as mui]
    [frutil.spa.mui.item-selector :as item-selector]
 
-   [frutil.db.datascript :as datascript]
    [frutil.db.query :as q]
 
-   [frutil.dataed.modules :as modules]
-   [frutil.dataed.modules.browser :as browser]
-   [frutil.dataed.modules.annotations :as annotations]))
+   [frutil.dataed.browser.core :as browser]))
 
 
-(def _modules [(annotations/module)
-               (browser/module)])
-
-(defn modules []
-  _modules)
-
-
-(defn db-name [] (navigation/param :db-name))
-(defn root-e [] (navigation/param :root-e))
-
-
-(state/def-state dbs {:localstorage? true})
-                      ;:localstorage-save-transform-f db/serializable-value})
-(def db (state/new-navigation-param-pointer dbs :db-name))
-
-
-(state/def-state cursors {:localstorage? true})
-(def cursor (state/new-navigation-param-pointer cursors :db-name))
-
-
-(defn transactor [db-name]
-  (fn [transact]
-    (state/update! dbs db-name transact)))
-
-
-;; (defn initialize-with-dummy! []
-
-;; (defonce initialized
-;;   (do
-;;     (initialize-with-dummy!)
-;;     true))
-
-
-;;; commands
-
-
-(defn entity-item-selector-options [e a c v]
-  {:items (map (fn [command]
-                 {:command command
-                  :ident (-> command :ident)
-                  :primary (or (-> command :text)
-                               (-> command :ident str)
-                               "hello")
-                  :secondary (or (-> command :description))})
-               (modules/commands (modules)))
-   :on-item-selected (fn [{:keys [command]}]
-                       (modules/execute-command e command (transactor (db-name))))})
 
 
 ;;; commons
@@ -137,7 +87,7 @@
     :color (-> palette :value)
     :on-click #(mui/show-dialog
                 [item-selector/Dialog
-                 (entity-item-selector-options e a c v)])}
+                 (browser/entity-item-selector-options e a c v)])}
    (if (string? v)
      (if (= v "")
        [:span
@@ -160,14 +110,14 @@
       :color (-> palette :value)
       :on-click #(mui/show-dialog
                   [item-selector/Dialog
-                   (entity-item-selector-options parent-e a parent-c e)])}
+                   (browser/entity-item-selector-options parent-e a parent-c e)])}
       ;; :href (navigation/href :browser {:db-name (db-name)
       ;;                                  :root-e e})}
      [:div.i "#" e]]))
 
 
 (defn AttributeValue [e a c v entity-path]
-  (if (q/attribute-is-ref? (db) a)
+  (if (q/attribute-is-ref? (browser/db) a)
     ^{:key v} [Ref e a c (if (int? v) v (get v :db/id)) entity-path]
     ^{:key v} [Value e a c v entity-path]))
 
@@ -179,7 +129,7 @@
      :color (-> palette :value-seq)
      :on-click #(mui/show-dialog
                  [item-selector/Dialog
-                  (entity-item-selector-options e a vs nil)])}
+                  (browser/entity-item-selector-options e a vs nil)])}
     [:div "⁞"]]
    (for [v vs]
      ^{:key v}
@@ -195,25 +145,25 @@
      :color (-> palette :attribute)
      :on-click #(mui/show-dialog
                  [item-selector/Dialog
-                  (entity-item-selector-options e a nil nil)])}
+                  (browser/entity-item-selector-options e a nil nil)])}
     [mui/Caption a]]
-   (if (q/attribute-is-many? (db) a)
+   (if (q/attribute-is-many? (browser/db) a)
      [AttributeValueCollection e a v entity-path]
      [AttributeValue e a nil v entity-path])])
 
 
-(dev/spy (q/reverse-ref-attributes-idents (db)))
+(dev/spy (q/reverse-ref-attributes-idents (browser/db)))
 
 
 (defn Entity [e entity-path]
-  (if-let [entity (q/entity (db) e)]
+  (if-let [entity (q/entity (browser/db) e)]
     (let [as (-> entity
                  keys
-                 (into (q/reverse-ref-attributes-idents (db)))
+                 (into (q/reverse-ref-attributes-idents (browser/db)))
                  sort)
           on-click #(mui/show-dialog
                      [item-selector/Dialog
-                      (entity-item-selector-options e nil nil nil)])]
+                      (browser/entity-item-selector-options e nil nil nil)])]
       [:div.Entity
        [TreeCardsWrapper
         [ActionCard
@@ -247,12 +197,12 @@
       {:style {:font-weight 900
                :letter-spacing "1px"}}
       "Dataed"]
-     [:div (db-name)]
-     (when-let [r (root-e)] [:div "r: " r])
-     (when-let [c (cursor)] [:div "c: " c])
+     [:div (browser/db-name)]
+     (when-let [r (browser/root-e)] [:div "r: " r])
+     (when-let [c (browser/cursor)] [:div "c: " c])
      [:div
       "[ "
-      (->> (modules)
+      (->> (browser/modules)
            (map :ident)
            (map name)
            sort
@@ -260,13 +210,6 @@
       " ]"]]])
 
 
-(defn create-db [db-name]
-  (js/console.log "CREATE EMPTY DB" db-name)
-  (let [k db-name
-        schema (modules/schema (modules))
-        db (datascript/new-db-with-schema schema)]
-    (state/set! dbs k db nil)
-    (state/set! cursors k 0 nil)))
 
 
 (defn CreateDb [db-name]
@@ -276,19 +219,19 @@
     [button
      {:variant :contained
       :color :secondary
-      :on-click #(create-db db-name)}
+      :on-click #(browser/create-db db-name)}
      "create"]]])
 
 
 (defn Browser [navigation-match]
   [:div
-   (if-let [db (db)]
+   (if-let [db (browser/db)]
      (let [root-e (get-in navigation-match [:parameters :path :root-e])]
        [EntitiesList
         (if (= root-e 0)
           (q/es-wheres db '[?e _ _])
           [root-e])])
-     [CreateDb (db-name)])])
+     [CreateDb (browser/db-name)])])
 
 
 (defn model []

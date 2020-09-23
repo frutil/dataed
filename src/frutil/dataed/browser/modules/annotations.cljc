@@ -1,7 +1,7 @@
-(ns frutil.dataed.modules.annotations
+(ns frutil.dataed.browser.modules.annotations
   (:require
-   [frutil.db.tx :as tx]))
-
+   [frutil.db.tx :as tx]
+   [frutil.dataed.browser.modules :as modules]))
 
 (defn init [db]
   db)
@@ -31,3 +31,4 @@
                :f add-annotation}]})
 
 
+(modules/reg-module (module))
