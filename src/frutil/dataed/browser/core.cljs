@@ -39,11 +39,13 @@
 
 (def tx-map
   {:add-component tx/add-component
-   :update-fact tx/update-fact})
+   :update-fact tx/update-fact
+   :retract-fact tx/retract-fact})
 
 
 (defn transactor [db-name]
   (fn [tx-id & args]
+    (js/console.log "TRANSACTION" tx-id args)
     (let [tx-f (get tx-map tx-id)
           _ (when-not tx-f (throw (ex-info (str "unsupported tx: " tx-id)
                                            {:tx-id tx-id

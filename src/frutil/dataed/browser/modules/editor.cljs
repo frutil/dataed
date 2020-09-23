@@ -18,6 +18,24 @@
   db)
 
 
+;;; command: delete-value
+
+(defn delete-value-veto [{:keys [e a v]}]
+  (or
+   (when-not e "no entity")
+   (when-not a "no attribute")
+   (when-not v "value")
+   (when (query/attribute-is-reverse-ref? a) "reverse reference")))
+
+(defn delete-value [{:keys [e a v transact]}]
+  (transact :retract-fact e a v))
+
+(def delete-value-command
+  {:ident :delete-value
+   :text "delete value"
+   :f delete-value
+   :veto-f delete-value-veto})
+
 ;;; command: edit-value
 
 (defn edit-supported-for-type? [v]
@@ -30,6 +48,7 @@
    (when-not e "no entity")
    (when-not a "no attribute")
    (when-not v "value")
+   (when (query/attribute-is-reverse-ref? a) "reverse reference")
    (when-not (edit-supported-for-type? v) "type not supported")))
 
 
@@ -60,8 +79,8 @@
   {:ident :editor
    :init-db-f init-db
    :schema []
-   :commands [edit-value-command]})
-
+   :commands [edit-value-command
+              delete-value-command]})
 
 
 (modules/reg-module! (module))
