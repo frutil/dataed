@@ -1,6 +1,6 @@
 (ns frutil.dataed.modules.brainstorming
   (:require
-   [frutil.db.core :as db]))
+   [frutil.db.tx :as tx]))
 
 
 (defn init [db]

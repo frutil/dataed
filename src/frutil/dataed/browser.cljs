@@ -24,13 +24,16 @@
    [frutil.spa.mui :as mui]
    [frutil.spa.mui.item-selector :as item-selector]
 
-   [frutil.db.core :as db]
+   [frutil.db.datascript :as datascript]
+   [frutil.db.query :as q]
 
    [frutil.dataed.modules :as modules]
+   [frutil.dataed.modules.browser :as browser]
    [frutil.dataed.modules.annotations :as annotations]))
 
 
-(def _modules [(annotations/module)])
+(def _modules [(annotations/module)
+               (browser/module)])
 
 (defn modules []
   _modules)
@@ -40,8 +43,8 @@
 (defn root-e [] (navigation/param :root-e))
 
 
-(state/def-state dbs {:localstorage? true
-                      :localstorage-save-transform-f db/serializable-value})
+(state/def-state dbs {:localstorage? true})
+                      ;:localstorage-save-transform-f db/serializable-value})
 (def db (state/new-navigation-param-pointer dbs :db-name))
 
 
@@ -164,7 +167,7 @@
 
 
 (defn AttributeValue [e a c v entity-path]
-  (if (db/attribute-is-ref? (db) a)
+  (if (q/attribute-is-ref? (db) a)
     ^{:key v} [Ref e a c (if (int? v) v (get v :db/id)) entity-path]
     ^{:key v} [Value e a c v entity-path]))
 
@@ -194,19 +197,19 @@
                  [item-selector/Dialog
                   (entity-item-selector-options e a nil nil)])}
     [mui/Caption a]]
-   (if (db/attribute-is-many? (db) a)
+   (if (q/attribute-is-many? (db) a)
      [AttributeValueCollection e a v entity-path]
      [AttributeValue e a nil v entity-path])])
 
 
-(dev/spy (db/q-reverse-ref-attributes-idents (db)))
+(dev/spy (q/reverse-ref-attributes-idents (db)))
 
 
 (defn Entity [e entity-path]
-  (if-let [entity (db/entity (db) e)]
+  (if-let [entity (q/entity (db) e)]
     (let [as (-> entity
                  keys
-                 (into (db/q-reverse-ref-attributes-idents (db)))
+                 (into (q/reverse-ref-attributes-idents (db)))
                  sort)
           on-click #(mui/show-dialog
                      [item-selector/Dialog
@@ -257,14 +260,12 @@
       " ]"]]])
 
 
-
-
 (defn create-db [db-name]
-  (js/console.log "CREATE DB" db-name)
+  (js/console.log "CREATE EMPTY DB" db-name)
   (let [k db-name
         schema (modules/schema (modules))
-        dummy-db (-> (db/new-db {:schema schema}))]
-    (state/set! dbs k dummy-db nil)
+        db (datascript/new-db-with-schema schema)]
+    (state/set! dbs k db nil)
     (state/set! cursors k 0 nil)))
 
 
@@ -285,7 +286,7 @@
      (let [root-e (get-in navigation-match [:parameters :path :root-e])]
        [EntitiesList
         (if (= root-e 0)
-          (db/q-es-wheres db '[?e _ _])
+          (q/es-wheres db '[?e _ _])
           [root-e])])
      [CreateDb (db-name)])])
 

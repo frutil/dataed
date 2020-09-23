@@ -1,12 +1,10 @@
-(ns frutil.dataed.modules
-  (:require
-   [frutil.db.core :as db]))
+(ns frutil.dataed.modules)
 
 
 (defn commands [modules]
   (reduce (fn [ret module]
             (concat ret (get module :commands)))
-          [] (modules)))
+          [] modules))
 
 
 (defn schema [modules]

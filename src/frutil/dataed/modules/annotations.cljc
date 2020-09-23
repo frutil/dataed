@@ -1,6 +1,6 @@
 (ns frutil.dataed.modules.annotations
   (:require
-   [frutil.db.core :as db]))
+   [frutil.db.tx :as tx]))
 
 
 (defn init [db]
@@ -10,12 +10,10 @@
 (defn add-annotation [e transact]
   (transact
    (fn [db]
-     (let [db (db/transact
-               db [[:db/add -1 :annotations.annotation/text ""]])
-           id (db/tempid db -1)
-           db (db/transact
-               db [[:db/add e :annotations.container/annotations id]])]
-       db))))
+     (tx/db-with-component
+      db
+      {:annotations.annotation/text "new annotation"}
+      [[e :annotations.container/annotations]]))))
 
 
 (defn module []
