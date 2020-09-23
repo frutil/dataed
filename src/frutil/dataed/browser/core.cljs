@@ -45,6 +45,15 @@
     (throw (ex-info message {::command-aborter-message message}))))
 
 
+(defn- command-veto [command context]
+  (try
+    (when-let [f (get command :veto-f)]
+      (f context))
+    (catch :default ex
+      (js/console.log "Exception in command veto-f for command" command "\n" ex)
+      ex)))
+
+
 (defn execute-command [module-ident command-ident context]
   ;; (js/console.log "EXECUTE COMMAND" command-ident)
   (try
@@ -63,19 +72,21 @@
 
 
 (defn command-selector-options [e a c v]
-  {:items (for [module (modules)
-                command (modules/module-commands (modules) (get module :ident))]
-            {:command command
-             :module module
-             :ident (-> command :ident)
-             :primary (or (-> command :text)
-                          (-> command :ident str)
-                          "<unidentifiable command>")
-             :secondary (-> command :description)})
-   :on-item-selected (fn [item]
-                       (execute-command (get-in item [:module :ident])
-                                        (get-in item [:command :ident])
-                                        {:e e :a a :c c :v v}))})
+  (let [context {:e e :a a :c c :v v :db (db)}]
+    {:items (for [module (modules)
+                  command (modules/module-commands (modules) (get module :ident))
+                  :when (nil? (command-veto command context))]
+              {:command command
+               :module module
+               :ident (-> command :ident)
+               :primary (or (-> command :text)
+                            (-> command :ident str)
+                            "<unidentifiable command>")
+               :secondary (-> command :description)})
+     :on-item-selected (fn [item]
+                         (execute-command (get-in item [:module :ident])
+                                          (get-in item [:command :ident])
+                                          {:e e :a a :c c :v v :db (db)}))}))
 
 
 (defn create-db [db-name]

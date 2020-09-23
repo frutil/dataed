@@ -7,6 +7,8 @@
   db)
 
 
+;;; command add-annotation
+
 (defn add-annotation [{:keys [e transact]}]
   (transact
    (fn [db]
@@ -14,6 +16,15 @@
       db
       {:annotations.annotation/text "new annotation"}
       [[e :annotations.container/annotations]]))))
+
+(def add-annotation-command
+  {:ident ::add-annotation
+   :text "add annotation"
+   :description "Adds a new annotation entity to the selected entity."
+   :f add-annotation})
+
+
+;;; module definition
 
 
 (defn module []
@@ -26,9 +37,7 @@
 
             {:db/ident       :annotations.annotation/text
              :db/valueType   :db.type/string}]
-   :commands [{:ident ::add-annotation
-               :text "Add Annotation"
-               :f add-annotation}]})
+   :commands [add-annotation-command]})
 
 
 (modules/reg-module! (module))
