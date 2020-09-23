@@ -11,11 +11,10 @@
 
 (defn add-annotation [{:keys [e transact]}]
   (transact
-   (fn [db]
-     (tx/db-with-component
-      db
-      {:annotations.annotation/text "new annotation"}
-      [[e :annotations.container/annotations]]))))
+   :add-component
+   {:annotations.annotation/text "new annotation"}
+   [[e :annotations.container/annotations]]))
+
 
 (def add-annotation-command
   {:ident ::add-annotation

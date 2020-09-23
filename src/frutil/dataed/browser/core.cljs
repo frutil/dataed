@@ -1,8 +1,11 @@
 (ns frutil.dataed.browser.core
   (:require
 
+   [datascript.core :as d]
+
    ;; frutil
    [frutil.db.datascript :as datascript]
+   [frutil.db.tx :as tx]
 
    ;; spa
    [frutil.spa.state :as state]
@@ -34,15 +37,26 @@
   (navigation/push-state :browser {:db-name (db-name)
                                    :root-e id}))
 
+(def tx-map
+  {:add-component tx/add-component
+   :update-fact tx/update-fact})
+
 
 (defn transactor [db-name]
-  (fn [transact]
-    (state/update! dbs db-name transact)))
+  (fn [tx-id & args]
+    (let [tx-f (get tx-map tx-id)
+          _ (when-not tx-f (throw (ex-info (str "unsupported tx: " tx-id)
+                                           {:tx-id tx-id
+                                            :args args})))
+          tx-data (apply tx-f args)]
+      (state/update! dbs db-name
+                     #(d/db-with % tx-data)))))
 
 
 (defn command-failer [command]
   (fn [message]
-    (throw (ex-info message {::command-aborter-message message}))))
+    (throw (ex-info message {::command-aborter-message message
+                             :command command}))))
 
 
 (defn- command-veto [command context]

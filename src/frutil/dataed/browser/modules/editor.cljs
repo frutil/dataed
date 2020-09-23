@@ -25,7 +25,7 @@
    (string? v)))
 
 
-(defn edit-value-veto [{:keys [db e a v]}]
+(defn edit-value-veto [{:keys [e a v]}]
   (or
    (when-not e "no entity")
    (when-not a "no attribute")
@@ -33,20 +33,12 @@
    (when-not (edit-supported-for-type? v) "type not supported")))
 
 
-(defn transact-value [e a c old-v new-v transact]
-  (when-not (= old-v new-v)
-    (transact
-     (fn [db]
-       (tx/db-with db [[:db/retract e a old-v]
-                       [:db/add e a new-v]])))))
-
-
-(defn edit-value [{:keys [e a c v transact]}]
+(defn edit-value [{:keys [e a v transact]}]
   (mui-form/show-form-dialog
    {:on-submit (fn [form]
-                 (transact-value e a c v
-                                 (get-in form [:fields a :value])
-                                 transact))}
+                 (let [new-v (get-in form [:fields a :value])]
+                   (when-not (= new-v v)
+                     (transact :update-fact e a v new-v))))}
    {:id a
     :field-type :text
     :value v
