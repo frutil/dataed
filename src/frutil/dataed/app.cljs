@@ -7,6 +7,7 @@
 
    ;; browser modules
    [frutil.dataed.browser.modules.browser]
+   [frutil.dataed.browser.modules.editor]
    [frutil.dataed.browser.modules.annotations]
 
    [frutil.dataed.desktop :as desktop]
