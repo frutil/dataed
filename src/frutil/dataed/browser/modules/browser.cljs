@@ -1,6 +1,7 @@
 (ns frutil.dataed.browser.modules.browser
   (:require
    [frutil.db.tx :as tx]
+   [frutil.db.query :as query]
    [frutil.dataed.browser.modules :as modules]
 
    [frutil.dataed.browser.core :as browser]))
@@ -11,14 +12,28 @@
 (defn init-db [db]
   db)
 
-;;; command: goto
 
-(defn goto-entity []
-  (browser/goto-entity 1))
+;;; command goto-attribute-schema
+
+(defn goto-attribute-schema [{:keys [db a fail!]}]
+  (let [e (query/e-wheres db ['?e :db/ident a])]
+    (when-not e (fail! (str "Attribute schema definition does not exist.")))
+    (browser/goto-entity e)))
+
+(def goto-attribute-schema-command
+  {:ident :goto-attribute-schema
+   :text "go to attribute schema"
+   :f goto-attribute-schema})
+
+
+;;; command: goto-entity
+
+(defn goto-entity [{:keys [v]}]
+  (browser/goto-entity v))
 
 
 (def goto-entity-command
-  {:ident :goto
+  {:ident :goto-entity
    :text "go to selected entity"
    :f goto-entity})
 
@@ -29,7 +44,8 @@
   {:ident :browser
    :init-db-f init-db
    :schema []
-   :commands [goto-entity-command]})
+   :commands [goto-entity-command
+              goto-attribute-schema-command]})
 
 
-(modules/reg-module (module))
+(modules/reg-module! (module))

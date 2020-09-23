@@ -87,7 +87,7 @@
     :color (-> palette :value)
     :on-click #(mui/show-dialog
                 [item-selector/Dialog
-                 (browser/entity-item-selector-options e a c v)])}
+                 (browser/command-selector-options e a c v)])}
    (if (string? v)
      (if (= v "")
        [:span
@@ -110,7 +110,7 @@
       :color (-> palette :value)
       :on-click #(mui/show-dialog
                   [item-selector/Dialog
-                   (browser/entity-item-selector-options parent-e a parent-c e)])}
+                   (browser/command-selector-options parent-e a parent-c e)])}
       ;; :href (navigation/href :browser {:db-name (db-name)
       ;;                                  :root-e e})}
      [:div.i "#" e]]))
@@ -129,7 +129,7 @@
      :color (-> palette :value-seq)
      :on-click #(mui/show-dialog
                  [item-selector/Dialog
-                  (browser/entity-item-selector-options e a vs nil)])}
+                  (browser/command-selector-options e a vs nil)])}
     [:div "⁞"]]
    (for [v vs]
      ^{:key v}
@@ -145,7 +145,7 @@
      :color (-> palette :attribute)
      :on-click #(mui/show-dialog
                  [item-selector/Dialog
-                  (browser/entity-item-selector-options e a nil nil)])}
+                  (browser/command-selector-options e a nil nil)])}
     [mui/Caption a]]
    (if (q/attribute-is-many? (browser/db) a)
      [AttributeValueCollection e a v entity-path]
@@ -163,7 +163,7 @@
                  sort)
           on-click #(mui/show-dialog
                      [item-selector/Dialog
-                      (browser/entity-item-selector-options e nil nil nil)])]
+                      (browser/command-selector-options e nil nil nil)])]
       [:div.Entity
        [TreeCardsWrapper
         [ActionCard

@@ -7,7 +7,7 @@
   db)
 
 
-(defn add-annotation [e transact]
+(defn add-annotation [{:keys [e transact]}]
   (transact
    (fn [db]
      (tx/db-with-component
@@ -31,4 +31,4 @@
                :f add-annotation}]})
 
 
-(modules/reg-module (module))
+(modules/reg-module! (module))
