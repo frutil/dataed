@@ -100,9 +100,6 @@
 
 
 (defn Ref [parent-e a parent-c e entity-path]
-  ;; [mui/Card
-  ;;  [:i "#" (get entity :db/id)]])
-
   (if false ;;FIXME expanded?
     [Entity e (conj entity-path e)]
     [ActionCard
@@ -111,18 +108,23 @@
       :on-click #(mui/show-dialog
                   [item-selector/Dialog
                    (browser/command-selector-options parent-e a parent-c e)])}
-      ;; :href (navigation/href :browser {:db-name (db-name)
-      ;;                                  :root-e e})}
-     [:div.i "#" e]]))
+     [:div.i
+      (when (q/attribute-is-component? (browser/db) a)
+        "> ")
+      "#" e]]))
 
 
 (defn AttributeValue [e a c v entity-path]
   (if (q/attribute-is-ref? (browser/db) a)
-    ^{:key v} [Ref e a c (if (int? v) v (get v :db/id)) entity-path]
+    ^{:key v} [Ref
+               e a c (if (int? v)
+                         v
+                         (get v :db/id))
+               entity-path]
     ^{:key v} [Value e a c v entity-path]))
 
 
-(defn AttributeValueCollection [e a vs entity-path]
+(defn AttributeValuesCollection [e a vs entity-path]
   [TreeCardsWrapper
    [ActionCard
     {:elevation (elevation entity-path 2)
@@ -148,7 +150,7 @@
                   (browser/command-selector-options e a nil nil)])}
     [mui/Caption a]]
    (if (q/attribute-is-many? (browser/db) a)
-     [AttributeValueCollection e a v entity-path]
+     [AttributeValuesCollection e a v entity-path]
      [AttributeValue e a nil v entity-path])])
 
 

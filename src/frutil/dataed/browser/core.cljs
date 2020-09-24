@@ -50,7 +50,7 @@
           _ (when-not tx-f (throw (ex-info (str "unsupported tx: " tx-id)
                                            {:tx-id tx-id
                                             :args args})))
-          tx-data (apply tx-f args)]
+          tx-data (apply tx-f (into [(db db-name)] args))]
       (state/update! dbs db-name
                      #(d/db-with % tx-data)))))
 

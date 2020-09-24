@@ -46,7 +46,7 @@
 
 (def goto-entity-command
   {:ident :goto-entity
-   :text "go to selected entity"
+   :text "go to entity"
    :f goto-entity
    :veto-f goto-entity-veto})
 

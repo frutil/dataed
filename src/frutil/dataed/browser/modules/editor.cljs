@@ -27,7 +27,7 @@
    (when-not v "value")
    (when (query/attribute-is-reverse-ref? a) "reverse reference")))
 
-(defn delete-value [{:keys [e a v transact]}]
+(defn delete-value [{:keys [db e a v transact]}]
   (transact :retract-fact e a v))
 
 (def delete-value-command
