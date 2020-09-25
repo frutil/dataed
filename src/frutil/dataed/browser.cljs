@@ -163,6 +163,10 @@
                  keys
                  (into (q/reverse-ref-attributes-idents (browser/db)))
                  sort)
+          as-nss (->> as
+                      (remove q/attribute-is-reverse-ref?)
+                      (map namespace)
+                      (into #{}))
           on-click #(mui/show-dialog
                      [item-selector/Dialog
                       (browser/command-selector-options e nil nil nil)])]
@@ -172,7 +176,14 @@
          {:elevation (elevation entity-path 0)
           :on-click on-click
           :color (-> palette :entity)}
-         [:div.i "#" e]]
+         [:div.stack
+          [:div.i "#" e]
+          (for [as-ns (sort as-nss)
+                :let [[e n] (reverse (str/split as-ns #"\.(?=[^\.]+$)"))]]
+            ^{:key as-ns}
+            [:div
+             (when n [:div {:style {:font-size "80%"}} n])
+             [:div.b e]])]]
         (for [a as
               :let [v (get entity a)]
               :when v]
