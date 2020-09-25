@@ -39,6 +39,7 @@
 
 (def tx-map
   {:add-component tx/add-component
+   :add-fact tx/add-fact
    :update-fact tx/update-fact
    :retract-fact tx/retract-fact})
 
