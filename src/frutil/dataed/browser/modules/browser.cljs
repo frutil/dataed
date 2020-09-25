@@ -33,8 +33,9 @@
 
 ;;; command: goto-entity
 
-(defn goto-entity-veto [{:keys [db a]}]
+(defn goto-entity-veto [{:keys [db a v]}]
   (or
+   (when-not v "no value selected")
    (when-not a "no reference selected")
    (when-not (query/attribute-is-ref? db a)
      (str "not a reference attribute: " a))))
