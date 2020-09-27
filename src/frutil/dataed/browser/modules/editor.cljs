@@ -23,6 +23,11 @@
   (or
    (string? v)))
 
+(defn edit-supported-for-attribute? [attr-entity]
+  (and
+   (not= (get attr-entity :db/valueType) :db.type/ref)))
+
+
 
 ;;; command: add-fact
 
@@ -52,7 +57,8 @@
                            (add-fact-to-attribute (assoc context :a ident)))
        :items (map (fn [a]
                      {:ident a})
-                   (query/attributes-in-schema db))}])))
+                   (query/attributes-in-schema
+                    db edit-supported-for-attribute?))}])))
 
 
 (def add-fact-command
