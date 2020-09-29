@@ -87,6 +87,24 @@
    :veto-f retract-fact-veto})
 
 
+;;; command: retract-entity
+
+(defn retract-entity-veto [{:keys [e a v]}]
+  (or
+   (when-not e "no entity")
+   (when a "attribute")
+   (when v "value")))
+
+(defn retract-entity [{:keys [e transact]}]
+  (transact :retract-entity e))
+
+(def retract-entity-command
+  {:ident :retract-entity
+   :text "retract entity"
+   :f retract-entity
+   :veto-f retract-entity-veto})
+
+
 ;;; command: edit-fact
 
 (defn edit-fact-veto [{:keys [e a v]}]
@@ -125,6 +143,7 @@
    :schema []
    :commands [edit-fact-command
               retract-fact-command
+              retract-entity-command
               add-fact-command]})
 
 

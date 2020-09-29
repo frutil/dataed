@@ -1,4 +1,4 @@
 {:watch-dirs ["src" "../frutil/src" "../spa/src"]
  :css-dirs ["resources/public/css"]
  :open-file-command "emacsclient"
- :open-url false}
+ :launch-js ["google-chrome" :open-url]}
