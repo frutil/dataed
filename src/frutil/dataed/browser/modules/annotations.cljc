@@ -13,7 +13,7 @@
   (transact
    :add-component
    {:annotations.annotation/text "new annotation"}
-   [[e :annotations.container/annotations]]))
+   e :annotations.container/annotations))
 
 
 (def add-annotation-command
