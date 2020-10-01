@@ -60,13 +60,40 @@
                    (query/attributes-in-schema
                     db edit-supported-for-attribute?))}])))
 
-
 (def add-fact-command
   {:ident :add-fact
    :text "add fact"
    :f add-fact
    :veto-f add-fact-veto})
 
+
+;;; command: add-component
+
+(defn add-component-veto [{:keys [db e a v]}]
+  (or
+   (when-not e "no entity")
+   (when-not (and a (query/attribute-is-component? db a)) "attribute is not component")
+   (when (and a (not (query/attribute-is-many? db a))) "attribute is not arity many")
+   (when v "value selected")))
+
+
+(defn add-component [{:keys [db e a transact] :as context}]
+  (if a
+    (transact :add-component {} e a)
+    (mui/show-dialog
+     [item-selector/Dialog
+      {:on-item-selected (fn [{:keys [ident]}]
+                           (transact :add-component {} e ident))
+       :items (map (fn [a]
+                     {:ident a})
+                   (query/attributes-in-schema
+                    db edit-supported-for-attribute?))}])))
+
+(def add-component-command
+  {:ident :add-component
+   :text "add component"
+   :f add-component
+   :veto-f add-component-veto})
 
 ;;; command: retract-fact
 
@@ -145,6 +172,7 @@
               retract-fact-command
               retract-entity-command
               add-fact-command]})
+              ;add-component-command]})
 
 
 (modules/reg-module! (module))
